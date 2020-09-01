@@ -28,6 +28,8 @@ body {
     overflow: auto;
     margin: 0;
     font: -apple-system-body;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -47,6 +49,9 @@ body {
     overflow: auto;
     display: table-cell;
     height: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+
 }
 
 #editor:focus {

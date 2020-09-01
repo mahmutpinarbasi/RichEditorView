@@ -192,6 +192,10 @@ RE.setHeading = function(heading) {
     document.execCommand('formatBlock', false, '<h' + heading + '>');
 };
 
+RE.removeHeading = function() {
+    document.execCommand('formatBlock', false, 'p')
+}
+
 RE.setIndent = function() {
     document.execCommand('indent', false, null);
 };
@@ -330,6 +334,79 @@ RE.blurFocus = function() {
     RE.editor.blur();
 };
 
+RE.isBold = function() {
+    var isBold = false;
+    if(document.queryCommandState) {
+        isBold = document.queryCommandState("bold");
+    }
+    
+    return isBold;
+}
+
+RE.isOrderedList = function() {
+    var isOrderedList = false;
+    if(document.queryCommandState) {
+        isOrderedList = document.queryCommandState("insertOrderedList");
+    }
+    
+    return isOrderedList;
+    
+}
+
+RE.isUnorderedList = function() {
+    var isUnorderedList = false;
+    if(document.queryCommandState) {
+        isUnorderedList = document.queryCommandState("insertUnorderedList");
+    }
+    
+    return isUnorderedList;
+}
+
+RE.isItalic = function() {
+    var isItalic = false;
+    if(document.queryCommandState) {
+        isItalic = document.queryCommandState("italic");
+    }
+    
+    return isItalic;
+}
+
+RE.isUnderlined = function() {
+    var isUnderlined = false;
+    if(document.queryCommandState) {
+        isUnderlined = document.queryCommandState("underline");
+    }
+    
+    return isUnderlined;
+}
+
+RE.isStrikeThrough = function() {
+    var isStrikeThrough = false;
+    if(document.queryCommandState) {
+        isStrikeThrough = document.queryCommandState("strikeThrough");
+    }
+    
+    return isStrikeThrough;
+}
+
+RE.getHeading = function() {
+    var heading = document.queryCommandValue("formatBlock");
+    
+    return heading;
+}
+
+RE.addSelectionChangedListener = function() {
+    document.addEventListener("selectionchange", RE.call)
+}
+
+RE.removeSelectionChangedListener = function() {
+    document.removeEventListener("selectionchange", RE.call)
+}
+
+RE.call = function() {
+    RE.callback("selectionChanged");
+}
+
 /**
 Recursively search element ancestors to find a element nodeName e.g. A
 **/
@@ -417,4 +494,66 @@ RE.getRelativeCaretYPosition = function() {
 
 window.onload = function() {
     RE.callback("ready");
+};
+
+RE.getCaretClientPosition2= function() {
+    var x = 0, y = 0;
+    var sel = window.getSelection();
+    if (sel.rangeCount) {
+        var range = sel.getRangeAt(0);
+        if (range.getClientRects) {
+            var rects = range.getClientRects();
+            if (rects.length > 0) {
+                x = rects[0].left;
+                y = rects[0].top;
+            }
+        }
+    }
+    return String(x) + "," + String(y);
+};
+
+RE.getCaretClientPosition= function() {
+    var sel = document.selection, range, rect;
+    var x = 0, y = 0;
+    if (sel) {
+        if (sel.type != "Control") {
+            range = sel.createRange();
+            range.collapse(true);
+            x = range.boundingLeft;
+            y = range.boundingTop;
+        }
+    } else if (window.getSelection) {
+        sel = window.getSelection();
+        if (sel.rangeCount) {
+            range = sel.getRangeAt(0).cloneRange();
+            if (range.getClientRects) {
+                range.collapse(true);
+                if (range.getClientRects().length>0){
+                    rect = range.getClientRects()[0];
+                    x = rect.left;
+                    y = rect.top;
+                }
+            }
+            // Fall back to inserting a temporary element
+            if (x == 0 && y == 0) {
+                var span = document.createElement("span");
+                if (span.getClientRects) {
+                    // Ensure span has dimensions and position by
+                    // adding a zero-width space character
+                    span.appendChild( document.createTextNode("\u200b") );
+                    range.insertNode(span);
+                    rect = span.getClientRects()[0];
+                    x = rect.left;
+                    y = rect.top;
+                    var spanParent = span.parentNode;
+                    spanParent.removeChild(span);
+                    
+                    // Glue any broken text nodes back together
+                    spanParent.normalize();
+                }
+            }
+        }
+    }
+
+    return String(x) + "," + String(y);
 };

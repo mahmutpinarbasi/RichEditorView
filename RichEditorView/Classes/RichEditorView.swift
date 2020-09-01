@@ -37,6 +37,8 @@ private let DefaultInnerLineHeight: Int = 21
     /// Called when custom actions are called by callbacks in the JS
     /// By default, this method is not used unless called by some custom JS that you add
     @objc optional func richEditor(_ editor: RichEditorView, handle action: String)
+    
+    @objc optional func richEditorSelectionChanged(_ editor: RichEditorView)
 }
 
 /// RichEditorView is a UIView that displays richly styled text, and allows it to be edited in a WYSIWYG fashion.
@@ -296,7 +298,13 @@ private let DefaultInnerLineHeight: Int = 21
     }
     
     public func header(_ h: Int) {
-        runJS("RE.setHeading('\(h)')")
+        editingEnabledVar = true
+        runJS("RE.getHeading();") { (heading) in
+            if "h\(h)" != heading {
+                self.runJS("RE.setHeading('\(h)');")
+            }
+            self.editingEnabledVar = false
+        }
     }
     
     public func indent() {
@@ -352,6 +360,81 @@ private let DefaultInnerLineHeight: Int = 21
     public func blur() {
         runJS("RE.blurFocus()")
     }
+    
+    public func isSelectionBold(completion: @escaping ((Bool) -> Void)) {
+        runJS("RE.isBold();") { (result) in
+            completion(result == "true")
+        }
+    }
+    
+    public func isOrderedList(completion: @escaping ((Bool) -> Void)) {
+        runJS("RE.isOrderedList();") { (result) in
+            completion(result == "true")
+        }
+    }
+    
+    public func isUnorderedList(completion: @escaping ((Bool) -> Void)) {
+        runJS("RE.isUnorderedList();") { (result) in
+            completion(result == "true")
+        }
+    }
+    
+    public func isItalic(completion: @escaping ((Bool) -> Void)) {
+        runJS("RE.isItalic();") { (result) in
+            completion(result == "true")
+        }
+    }
+    
+    public func isUnderlined(completion: @escaping ((Bool) -> Void)) {
+        runJS("RE.isUnderlined();") { (result) in
+            completion(result == "true")
+        }
+    }
+    
+    public func isStrikeThrough(completion: @escaping ((Bool) -> Void)) {
+        runJS("RE.isStrikeThrough();") { (result) in
+            completion(result == "true")
+        }
+    }
+    
+    public func getHeading(completion: @escaping ((String) -> Void)) {
+        editingEnabledVar = true
+        runJS("RE.getHeading();") { (result) in
+            self.editingEnabledVar = false
+            completion(result)
+        }
+    }
+    
+    public func removeHeading() {
+        runJS("RE.removeHeading();")
+    }
+    
+    public func activateSelectionChanged() {
+        runJS("RE.addSelectionChangedListener();")
+    }
+    
+    public func deactivateSelectionChanged() {
+        runJS("RE.removeSelectionChangedListener();")
+    }
+    
+    public struct CursorLocation {
+        let x: Double
+        let y: Double
+    }
+    
+    public func getCursorLocation(completion: @escaping ((CursorLocation?) -> Void)) {
+        
+        runJS("RE.getCaretClientPosition();") { (locationString) in
+            let subStrings = locationString.split(separator: ",", maxSplits: 1, omittingEmptySubsequences: false)
+                    
+            if let x = Double(subStrings[0]), let y = Double(subStrings[1]) {
+                completion(CursorLocation.init(x: x, y: y))
+            } else {
+                completion(nil)
+            }
+        }
+    }
+
     
     /// Runs some JavaScript on the WKWebView and returns the result
     /// If there is no result, returns an empty string
@@ -570,6 +653,8 @@ private let DefaultInnerLineHeight: Int = 21
                 
                 self.delegate?.richEditor?(self, handle: action)
             }
+        } else if method.hasPrefix("selectionChanged") {
+            delegate?.richEditorSelectionChanged?(self)
         }
     }
     
@@ -580,7 +665,7 @@ private let DefaultInnerLineHeight: Int = 21
             focus()
             return true
         } else {
-            return false
+            return true
         }
     }
     
