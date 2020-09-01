@@ -298,12 +298,12 @@ private let DefaultInnerLineHeight: Int = 21
     }
     
     public func header(_ h: Int) {
-        editingEnabledVar = true
+        editingEnabled = true
         runJS("RE.getHeading();") { (heading) in
             if "h\(h)" != heading {
                 self.runJS("RE.setHeading('\(h)');")
             }
-            self.editingEnabledVar = false
+            self.editingEnabled = false
         }
     }
     
@@ -398,9 +398,9 @@ private let DefaultInnerLineHeight: Int = 21
     }
     
     public func getHeading(completion: @escaping ((String) -> Void)) {
-        editingEnabledVar = true
+        editingEnabled = true
         runJS("RE.getHeading();") { (result) in
-            self.editingEnabledVar = false
+            self.editingEnabled = false
             completion(result)
         }
     }
