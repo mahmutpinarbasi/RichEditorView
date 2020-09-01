@@ -418,8 +418,8 @@ private let DefaultInnerLineHeight: Int = 21
     }
     
     public struct CursorLocation {
-        let x: Double
-        let y: Double
+        public let x: Double
+        public let y: Double
     }
     
     public func getCursorLocation(completion: @escaping ((CursorLocation?) -> Void)) {
@@ -575,7 +575,7 @@ private let DefaultInnerLineHeight: Int = 21
     /// Scrolls the editor to a position where the caret is visible.
     /// Called repeatedly to make sure the caret is always visible when inputting text.
     /// Works only if the `lineHeight` of the editor is available.
-    private func scrollCaretToVisible() {
+    public func scrollCaretToVisible() {
         let scrollView = self.webView.scrollView
         
         getClientHeight(handler: { clientHeight in
